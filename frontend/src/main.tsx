@@ -9,6 +9,7 @@ import { TicketDetailPage } from './pages/tickets/detail/TicketDetailPage'
 import { NewTicketPage } from './pages/tickets/new/NewTicketPage'
 import { MetricsPage } from './pages/metrics/MetricsPage'
 import { EscalationsPage } from './pages/escalations/EscalationsPage'
+import { AdminPage } from './pages/admin/AdminPage'
 import { useAuthStore } from './store/auth'
 import './index.css'
 
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="tickets/:id" element={<TicketDetailPage />} />
             <Route path="escalations" element={<EscalationsPage />} />
             <Route path="metrics" element={<MetricsPage />} />
+            <Route path="admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/tickets" replace />} />
         </Routes>

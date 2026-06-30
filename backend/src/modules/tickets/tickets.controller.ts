@@ -71,9 +71,9 @@ export class TicketsController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateTicketDto,
-    @CurrentAgent() agent: { agentId: string },
+    @CurrentAgent() agent: { agentId: string; role: string },
   ) {
-    return this.ticketsService.update(id, dto, agent.agentId)
+    return this.ticketsService.update(id, dto, agent.agentId, agent.role)
   }
 
   @Post(':id/classify')

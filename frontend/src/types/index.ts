@@ -18,8 +18,11 @@ export interface Agent {
   role: AgentRole
   isAvailable: boolean
   maxCapacity: number
+  createdAt?: string
   skills?: { category: Category }[]
   _count?: { assignedTickets: number }
+  activeTickets?: number
+  loadRatio?: number
 }
 
 export interface Ticket {

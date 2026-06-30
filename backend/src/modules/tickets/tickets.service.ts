@@ -62,6 +62,14 @@ export class TicketsService {
 
     const saved = await this.ticketRepository.save(ticket)
 
+    // Auto-assign to best available agent
+    if (resolvedCategoryId) {
+      const suggestion = await this.suggestSpecialistForCategory(resolvedCategoryId)
+      if (suggestion) {
+        await this.ticketRepository.update(saved.id, { assignedTo: suggestion.agent.id })
+      }
+    }
+
     await this.applyPostClassificationRules(saved.id, resolvedCategoryId, classification, dto.title)
 
     const full = await this.ticketRepository.findOne({
@@ -135,9 +143,16 @@ export class TicketsService {
     return ticket
   }
 
-  async update(id: string, dto: UpdateTicketDto, agentId: string) {
+  async update(id: string, dto: UpdateTicketDto, agentId: string, agentRole?: string) {
     const current = await this.ticketRepository.findOne({ where: { id } })
     if (!current) throw new NotFoundException('Ticket no encontrado')
+
+    // Solo SUPERVISOR/ADMIN pueden reasignar tickets
+    if (dto.assignedTo !== undefined && dto.assignedTo !== current.assignedTo) {
+      if (!agentRole || !['SUPERVISOR', 'ADMIN'].includes(agentRole)) {
+        throw new ForbiddenException('Solo supervisores y administradores pueden reasignar tickets')
+      }
+    }
 
     // Boundary enforcement: el agente (aiSuggested=true) no puede enrutar categorías sensibles
     if (dto.aiSuggested && dto.categoryId) {
