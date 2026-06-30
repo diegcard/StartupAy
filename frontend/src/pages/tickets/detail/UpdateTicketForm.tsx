@@ -1,16 +1,18 @@
-import { useState } from 'react'
-import { CheckCircle, Sparkles, Lock, Globe, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CheckCircle, Sparkles, Lock, Globe, Loader2, ArrowRight } from 'lucide-react'
 import { Card } from '../../../components/ui/Card'
 import { inputClass } from '../../../components/ui/FormField'
 import { Button } from '../../../components/ui/Button'
-import { UpdateTicketPayload } from '../../../services/tickets.service'
-import { ticketsService } from '../../../services/tickets.service'
+import { UpdateTicketPayload, ticketsService } from '../../../services/tickets.service'
 import { useCategories } from '../../../hooks/useCategories'
 import { useAgents } from '../../../hooks/useAgents'
 import { useParams } from 'react-router-dom'
 import { toast } from '../../../store/toast'
+import { Ticket } from '../../../types'
 
-const STATUS_LABELS: Record<string, string> = {
+type Status = 'OPEN' | 'IN_PROGRESS' | 'WAITING_CLIENT' | 'ESCALATED' | 'RESOLVED' | 'CLOSED'
+
+const STATUS_LABELS: Record<Status, string> = {
   OPEN:           'Abierto',
   IN_PROGRESS:    'En progreso',
   WAITING_CLIENT: 'Esperando cliente',
@@ -19,22 +21,55 @@ const STATUS_LABELS: Record<string, string> = {
   CLOSED:         'Cerrado',
 }
 
+const STATUS_COLORS: Record<Status, string> = {
+  OPEN:           'bg-blue-100 text-blue-700 border-blue-200',
+  IN_PROGRESS:    'bg-indigo-100 text-indigo-700 border-indigo-200',
+  WAITING_CLIENT: 'bg-amber-100 text-amber-700 border-amber-200',
+  ESCALATED:      'bg-red-100 text-red-700 border-red-200',
+  RESOLVED:       'bg-emerald-100 text-emerald-700 border-emerald-200',
+  CLOSED:         'bg-slate-100 text-slate-600 border-slate-200',
+}
+
+// Máquina de estados: transiciones válidas desde cada estado
+const STATE_TRANSITIONS: Record<Status, Status[]> = {
+  OPEN:           ['IN_PROGRESS', 'WAITING_CLIENT', 'ESCALATED', 'CLOSED'],
+  IN_PROGRESS:    ['WAITING_CLIENT', 'ESCALATED', 'RESOLVED'],
+  WAITING_CLIENT: ['IN_PROGRESS', 'RESOLVED', 'CLOSED'],
+  ESCALATED:      ['IN_PROGRESS', 'RESOLVED', 'CLOSED'],
+  RESOLVED:       ['CLOSED', 'OPEN'],
+  CLOSED:         ['OPEN'],
+}
+
 interface UpdateTicketFormProps {
+  ticket: Ticket
   onUpdate: (payload: UpdateTicketPayload) => void
   isPending: boolean
 }
 
-export function UpdateTicketForm({ onUpdate, isPending }: UpdateTicketFormProps) {
+export function UpdateTicketForm({ ticket, onUpdate, isPending }: UpdateTicketFormProps) {
   const { id } = useParams<{ id: string }>()
-  const [status,     setStatus]     = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [assignedTo, setAssignedTo] = useState('')
+
+  const [status,     setStatus]     = useState<Status | ''>('')
+  const [categoryId, setCategoryId] = useState(ticket.categoryId ?? '')
+  const [assignedTo, setAssignedTo] = useState(ticket.assignedTo ?? '')
   const [reason,     setReason]     = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [autoAssigning, setAutoAssigning] = useState(false)
 
   const { data: categories } = useCategories()
   const { data: agents }     = useAgents()
+
+  // Sincronizar con el ticket cuando cambia (navegación entre tickets)
+  useEffect(() => {
+    setStatus('')
+    setCategoryId(ticket.categoryId ?? '')
+    setAssignedTo(ticket.assignedTo ?? '')
+    setReason('')
+    setIsInternal(false)
+  }, [ticket.id])
+
+  const currentStatus = ticket.status as Status
+  const allowedTransitions = STATE_TRANSITIONS[currentStatus] ?? []
 
   async function handleAutoAssign() {
     if (!id) return
@@ -56,16 +91,18 @@ export function UpdateTicketForm({ onUpdate, isPending }: UpdateTicketFormProps)
 
   function handleSubmit() {
     const payload: UpdateTicketPayload = { aiSuggested: false }
-    if (status)     payload.status = status
-    if (categoryId) payload.categoryId = categoryId
-    if (assignedTo) payload.assignedTo = assignedTo
-    if (reason)     payload.reason = reason
+
+    if (status)                              payload.status = status
+    if (categoryId !== (ticket.categoryId ?? '')) payload.categoryId = categoryId
+    if (assignedTo !== (ticket.assignedTo  ?? '')) payload.assignedTo = assignedTo
+    if (reason)                              payload.reason = reason
     payload.isInternal = isInternal
-    if (!status && !categoryId && !assignedTo && !reason) return
+
+    const hasChanges = payload.status || payload.categoryId || payload.assignedTo || payload.reason
+    if (!hasChanges) return
+
     onUpdate(payload)
     setStatus('')
-    setCategoryId('')
-    setAssignedTo('')
     setReason('')
     setIsInternal(false)
   }
@@ -74,23 +111,72 @@ export function UpdateTicketForm({ onUpdate, isPending }: UpdateTicketFormProps)
     <Card className="p-4 space-y-3">
       <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actualizar</h3>
 
-      <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass}>
-        <option value="">— Estado —</option>
-        {Object.entries(STATUS_LABELS).map(([val, label]) => (
-          <option key={val} value={val}>{label}</option>
-        ))}
-      </select>
+      {/* Estado actual + máquina de estados */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400">Estado actual:</span>
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[currentStatus]}`}>
+            {STATUS_LABELS[currentStatus]}
+          </span>
+        </div>
 
-      <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputClass}>
-        <option value="">— Categoría —</option>
+        {/* Flujo de transiciones válidas */}
+        <div className="flex flex-wrap items-center gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100">
+          {allowedTransitions.length === 0 ? (
+            <span className="text-[11px] text-slate-400 italic">No hay transiciones disponibles</span>
+          ) : (
+            allowedTransitions.map((s, i) => (
+              <div key={s} className="flex items-center gap-1">
+                {i > 0 && <span className="text-slate-300 text-[10px]">·</span>}
+                <button
+                  type="button"
+                  onClick={() => setStatus(s === status ? '' : s)}
+                  className={`text-[11px] font-medium px-2 py-0.5 rounded-full border transition-all ${
+                    status === s
+                      ? STATUS_COLORS[s] + ' ring-2 ring-offset-1 ring-current'
+                      : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                  }`}
+                >
+                  {STATUS_LABELS[s]}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {status && (
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+            <span className={`px-1.5 py-0.5 rounded-full border text-[10px] font-semibold ${STATUS_COLORS[currentStatus]}`}>
+              {STATUS_LABELS[currentStatus]}
+            </span>
+            <ArrowRight className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            <span className={`px-1.5 py-0.5 rounded-full border text-[10px] font-semibold ${STATUS_COLORS[status]}`}>
+              {STATUS_LABELS[status]}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Categoría — pre-seleccionada con la actual */}
+      <select
+        value={categoryId}
+        onChange={e => setCategoryId(e.target.value)}
+        className={inputClass}
+      >
+        <option value="">— Sin categoría —</option>
         {categories?.map(c => (
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </select>
 
+      {/* Agente — pre-seleccionado con el actual */}
       <div className="space-y-1.5">
-        <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className={inputClass}>
-          <option value="">— Asignar a —</option>
+        <select
+          value={assignedTo}
+          onChange={e => setAssignedTo(e.target.value)}
+          className={inputClass}
+        >
+          <option value="">— Sin asignar —</option>
           {agents?.filter(a => a.role === 'AGENT' || a.role === 'SUPERVISOR').map(a => (
             <option key={a.id} value={a.id}>
               {a.name}{(a as any).loadRatio != null ? ` (${Math.round((a as any).loadRatio * 100)}% carga)` : ''}
@@ -110,7 +196,7 @@ export function UpdateTicketForm({ onUpdate, isPending }: UpdateTicketFormProps)
         </button>
       </div>
 
-      {/* Improved notes section */}
+      {/* Nota */}
       <div className="rounded-xl border border-slate-200 overflow-hidden">
         <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200">
           <button

@@ -175,6 +175,7 @@ export function TicketDetailPage() {
           <TicketSidebar ticket={ticket} />
           {canUpdate && (
             <UpdateTicketForm
+              ticket={ticket}
               onUpdate={payload => updateMutation.mutate(payload)}
               isPending={updateMutation.isPending}
             />
