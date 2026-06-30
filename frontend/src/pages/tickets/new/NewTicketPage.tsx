@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Sparkles, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Sparkles, AlertCircle, Zap } from 'lucide-react'
 import { ticketsService } from '../../../services/tickets.service'
 import { toast } from '../../../store/toast'
 import { useCategories } from '../../../hooks/useCategories'
@@ -12,7 +12,6 @@ const initialForm = {
   title: '',
   description: '',
   channel: 'WEB' as const,
-  priority: 'MEDIUM' as const,
   merchantId: '',
   transactionId: '',
   contactEmail: '',
@@ -58,7 +57,6 @@ export function NewTicketPage() {
         title: form.title,
         description: form.description,
         channel: form.channel,
-        priority: form.priority,
         categoryId: form.categoryId || undefined,
         merchantId: form.merchantId || undefined,
         transactionId: form.transactionId || undefined,
@@ -126,12 +124,12 @@ export function NewTicketPage() {
             </FormField>
 
             <FormField label="Prioridad">
-              <select value={form.priority} onChange={e => set('priority', e.target.value)} className={inputClass}>
-                <option value="LOW">Baja</option>
-                <option value="MEDIUM">Media</option>
-                <option value="HIGH">Alta</option>
-                <option value="CRITICAL">Crítica</option>
-              </select>
+              <div className={`${inputClass} flex items-center gap-2 cursor-default select-none bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200`}>
+                <Zap className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                <span className="text-[12px] text-blue-700 font-medium leading-tight">
+                  Gemini la asignará automáticamente
+                </span>
+              </div>
             </FormField>
           </div>
 
