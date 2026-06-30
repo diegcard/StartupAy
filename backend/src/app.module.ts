@@ -25,7 +25,7 @@ import { EscalationsModule } from './modules/escalations/escalations.module'
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [Category, Agent, AgentSkill, Ticket, TicketHistory, Attachment, Escalation],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: true,
       logging: false,
     }),
     GeminiModule,
