@@ -34,7 +34,7 @@ export class GeminiService {
         .map(c => `- ID: ${c.id} | Nombre: ${c.name} | Descripción: ${c.description}`)
         .join('\n')
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' })
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
 
       const prompt = `Eres un clasificador de tickets de soporte para una plataforma fintech de pagos.
 
