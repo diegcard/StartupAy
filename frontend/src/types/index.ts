@@ -47,6 +47,7 @@ export interface Ticket {
   aiSuggestedCategory?: string
   aiConfidence?: number
   aiSummary?: string
+  aiDraftResponse?: string
   history?: TicketHistoryEntry[]
   escalations?: Escalation[]
 }

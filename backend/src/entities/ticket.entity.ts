@@ -77,6 +77,9 @@ export class Ticket {
   @Column('text', { nullable: true })
   aiSummary: string
 
+  @Column('text', { nullable: true })
+  aiDraftResponse: string
+
   @OneToMany(() => TicketHistory, h => h.ticket)
   history: TicketHistory[]
 

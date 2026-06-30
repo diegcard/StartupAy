@@ -12,12 +12,17 @@ async function seed() {
 
   // ── Categorías ──────────────────────────────────────────────────────────────
   const categoryData = [
-    { name: 'Fraude', description: 'Transacciones no reconocidas, uso no autorizado de cuenta, robo de identidad', requiresHuman: true, slaHours: 4 },
-    { name: 'Compliance', description: 'Cumplimiento regulatorio, KYC, AML, documentación legal requerida', requiresHuman: true, slaHours: 8 },
-    { name: 'Disputas de Pago', description: 'Contracargos, pagos duplicados, montos incorrectos, reembolsos pendientes', requiresHuman: false, slaHours: 12 },
-    { name: 'Integración API', description: 'Errores de integración técnica, webhooks fallidos, problemas de SDK', requiresHuman: false, slaHours: 24 },
-    { name: 'Acceso y Cuenta', description: 'Problemas de login, bloqueo de cuenta, gestión de usuarios y permisos', requiresHuman: false, slaHours: 16 },
-    { name: 'Operaciones Generales', description: 'Consultas sobre funcionalidades, configuración del dashboard, reportes', requiresHuman: false, slaHours: 48 },
+    // requiresHuman = true → always escalate (HITL obligatorio)
+    { name: 'Fraude',                  description: 'Transacciones no reconocidas, uso no autorizado de cuenta, robo de identidad, cuenta comprometida',                             requiresHuman: true,  slaHours: 4  },
+    { name: 'Compliance',              description: 'Cumplimiento regulatorio, KYC/AML avanzado, documentación legal, reportes regulatorios, auditorías',                           requiresHuman: true,  slaHours: 8  },
+    // Categorías operativas — agente puede sugerir/ejecutar
+    { name: 'Pago Fallido',            description: 'Transacción rechazada, error de procesamiento, pago declinado por el banco, timeout de pasarela',                              requiresHuman: false, slaHours: 6  },
+    { name: 'Disputas y Contracargos', description: 'Contracargos iniciados, pagos duplicados, montos incorrectos, reembolsos pendientes o rechazados',                             requiresHuman: false, slaHours: 12 },
+    { name: 'Integración API',         description: 'Errores de integración técnica, webhooks fallidos, problemas de SDK, certificados, autenticación OAuth',                       requiresHuman: false, slaHours: 24 },
+    { name: 'Acceso y Cuenta',         description: 'Problemas de login, bloqueo de cuenta, recuperación de contraseña, gestión de usuarios, permisos de rol',                     requiresHuman: false, slaHours: 16 },
+    { name: 'Límites y Verificación',  description: 'Límites de transacción alcanzados, verificación de identidad básica, onboarding de usuarios, documentos pendientes',          requiresHuman: false, slaHours: 24 },
+    { name: 'Liquidaciones',           description: 'Demoras en desembolso, settlement no recibido, discrepancias en liquidación, conciliación de saldos',                         requiresHuman: false, slaHours: 8  },
+    { name: 'Soporte General',         description: 'Consultas sobre funcionalidades, configuración del dashboard, generación de reportes, dudas sobre el producto',               requiresHuman: false, slaHours: 48 },
   ]
 
   const categories: Category[] = []
@@ -56,16 +61,21 @@ async function seed() {
   console.log(`✓ ${agents.length} agentes`)
 
   // ── Skills ───────────────────────────────────────────────────────────────────
-  const fraud = categories.find(c => c.name === 'Fraude')!
-  const compliance = categories.find(c => c.name === 'Compliance')!
-  const api = categories.find(c => c.name === 'Integración API')!
+  const fraud        = categories.find(c => c.name === 'Fraude')!
+  const compliance   = categories.find(c => c.name === 'Compliance')!
+  const api          = categories.find(c => c.name === 'Integración API')!
+  const disputes     = categories.find(c => c.name === 'Disputas y Contracargos')!
+  const liquidations = categories.find(c => c.name === 'Liquidaciones')!
   const [, ana, carlos, maria] = agents
 
   const skillsData = [
-    { agentId: ana.id, categoryId: fraud.id },
-    { agentId: ana.id, categoryId: compliance.id },
+    { agentId: ana.id,    categoryId: fraud.id },
+    { agentId: ana.id,    categoryId: compliance.id },
+    { agentId: ana.id,    categoryId: disputes.id },
     { agentId: carlos.id, categoryId: api.id },
-    { agentId: maria.id, categoryId: fraud.id },
+    { agentId: carlos.id, categoryId: liquidations.id },
+    { agentId: maria.id,  categoryId: fraud.id },
+    { agentId: maria.id,  categoryId: disputes.id },
   ]
 
   for (const data of skillsData) {

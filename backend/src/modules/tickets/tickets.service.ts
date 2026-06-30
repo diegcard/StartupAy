@@ -39,7 +39,12 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto) {
-    const classification = await this.gemini.classifyTicket(dto.title, dto.description)
+    const classification = await this.gemini.classifyTicket(dto.title, dto.description, {
+      channel: dto.channel,
+      merchantId: dto.merchantId,
+      transactionId: dto.transactionId,
+      contactEmail: dto.contactEmail,
+    })
     const resolvedCategoryId = dto.categoryId ?? classification?.categoryId ?? null
     const priority = (classification?.priority as Priority) ?? Priority.MEDIUM
     const slaDeadline = await this.sla.calculateDeadline(resolvedCategoryId, priority)
@@ -58,6 +63,7 @@ export class TicketsService {
       aiSuggestedCategory: classification?.categoryId ?? null,
       aiConfidence: classification?.confidence ?? null,
       aiSummary: classification?.summary ?? null,
+      aiDraftResponse: classification?.draftResponse ?? null,
     })
 
     const saved = await this.ticketRepository.save(ticket)
@@ -203,13 +209,19 @@ export class TicketsService {
     const ticket = await this.ticketRepository.findOne({ where: { id } })
     if (!ticket) throw new NotFoundException('Ticket no encontrado')
 
-    const classification = await this.gemini.classifyTicket(ticket.title, ticket.description)
+    const classification = await this.gemini.classifyTicket(ticket.title, ticket.description, {
+      channel: ticket.channel,
+      merchantId: ticket.merchantId,
+      transactionId: ticket.transactionId,
+      contactEmail: ticket.contactEmail,
+    })
     if (!classification) throw new InternalServerErrorException('Error al clasificar con Gemini')
 
     await this.ticketRepository.update(id, {
       aiSuggestedCategory: classification.categoryId,
       aiConfidence: classification.confidence,
       aiSummary: classification.summary,
+      aiDraftResponse: classification.draftResponse ?? null,
     })
 
     return classification
