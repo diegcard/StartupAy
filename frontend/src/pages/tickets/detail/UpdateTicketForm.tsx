@@ -110,27 +110,54 @@ export function UpdateTicketForm({ onUpdate, isPending }: UpdateTicketFormProps)
         </button>
       </div>
 
-      <div className="space-y-1.5">
+      {/* Improved notes section */}
+      <div className="rounded-xl border border-slate-200 overflow-hidden">
+        <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => setIsInternal(false)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all flex-1 justify-center ${
+              !isInternal
+                ? 'bg-white shadow-sm text-slate-700 border border-slate-200'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <Globe className="w-3 h-3" />
+            Nota pública
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsInternal(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all flex-1 justify-center ${
+              isInternal
+                ? 'bg-amber-500 shadow-sm text-white'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <Lock className="w-3 h-3" />
+            Nota interna
+          </button>
+        </div>
         <textarea
           value={reason}
           onChange={e => setReason(e.target.value)}
-          placeholder={isInternal ? 'Nota interna (solo agentes)…' : 'Motivo del cambio…'}
-          rows={3}
-          className={`${inputClass} resize-none`}
-        />
-        <button
-          onClick={() => setIsInternal(v => !v)}
-          className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${
-            isInternal
-              ? 'text-amber-600 hover:text-amber-700'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          {isInternal
-            ? <><Lock className="w-3 h-3" /> Nota interna</>
-            : <><Globe className="w-3 h-3" /> Nota pública</>
+          placeholder={isInternal
+            ? 'Nota interna — solo visible para el equipo de soporte…'
+            : 'Motivo del cambio o respuesta al cliente…'
           }
-        </button>
+          rows={3}
+          className={`w-full px-3 py-2.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none resize-none ${
+            isInternal ? 'bg-amber-50/40' : ''
+          }`}
+        />
+        {isInternal && (
+          <div className="px-3 py-1.5 bg-amber-50 border-t border-amber-100">
+            <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5" />
+              Visible solo para agentes — no se mostrará al cliente
+            </p>
+          </div>
+        )}
       </div>
 
       <Button onClick={handleSubmit} loading={isPending} className="w-full">

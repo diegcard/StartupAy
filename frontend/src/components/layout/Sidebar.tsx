@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Ticket, BarChart2, LogOut, Settings, ShieldAlert } from 'lucide-react'
+import { LayoutDashboard, Ticket, BarChart2, LogOut, Settings, ShieldAlert, User } from 'lucide-react'
 import { useAuthStore } from '../../store/auth'
 import { usePendingEscalations } from '../../hooks/useEscalations'
 
 const navItems = [
-  { to: '/tickets',    icon: Ticket,      label: 'Tickets' },
-  { to: '/escalations',icon: ShieldAlert, label: 'Escalaciones', roles: ['SUPERVISOR', 'ADMIN'] },
-  { to: '/metrics',    icon: BarChart2,   label: 'Métricas',     roles: ['SUPERVISOR', 'ADMIN'] },
-  { to: '/admin',      icon: Settings,    label: 'Admin',        roles: ['ADMIN'] },
+  { to: '/',           icon: LayoutDashboard, label: 'Inicio',       exact: true },
+  { to: '/tickets',    icon: Ticket,          label: 'Tickets' },
+  { to: '/escalations',icon: ShieldAlert,     label: 'Escalaciones', roles: ['SUPERVISOR', 'ADMIN'] },
+  { to: '/metrics',    icon: BarChart2,       label: 'Métricas',     roles: ['SUPERVISOR', 'ADMIN'] },
+  { to: '/admin',      icon: Settings,        label: 'Admin',        roles: ['ADMIN'] },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
@@ -29,6 +30,11 @@ export function Sidebar() {
     .map(n => n[0])
     .join('')
     .toUpperCase() ?? '?'
+
+  function isActive(to: string, exact?: boolean) {
+    if (exact) return pathname === to
+    return pathname === to || pathname.startsWith(to + '/')
+  }
 
   return (
     <aside className="w-[220px] flex-shrink-0 bg-[#0f1c2e] flex flex-col h-screen select-none">
@@ -53,8 +59,8 @@ export function Sidebar() {
 
       {/* ── Nav items ── */}
       <nav className="flex-1 px-2.5 pb-4 space-y-px overflow-y-auto sidebar-scroll">
-        {visible.map(({ to, icon: Icon, label }) => {
-          const active = pathname === to || pathname.startsWith(to + '/')
+        {visible.map(({ to, icon: Icon, label, exact }) => {
+          const active = isActive(to, exact)
           return (
             <Link
               key={to}
@@ -65,7 +71,6 @@ export function Sidebar() {
                   : 'text-white/50 hover:bg-white/[0.05] hover:text-white/85'
               }`}
             >
-              {/* Left accent bar */}
               {active && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] bg-blue-400 rounded-r-full" />
               )}
@@ -85,8 +90,10 @@ export function Sidebar() {
 
       {/* ── User section ── */}
       <div className="border-t border-white/[0.08] p-3">
-        {/* Avatar + info */}
-        <div className="flex items-center gap-2.5 px-2 py-2 mb-0.5">
+        <Link
+          to="/profile"
+          className="flex items-center gap-2.5 px-2 py-2 mb-0.5 rounded-lg hover:bg-white/[0.05] transition-colors group"
+        >
           <div className="w-7 h-7 rounded-full bg-blue-600 border border-blue-500/40 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
             {initials}
           </div>
@@ -96,9 +103,9 @@ export function Sidebar() {
               {ROLE_LABELS[agent?.role ?? ''] ?? agent?.role}
             </p>
           </div>
-        </div>
+          <User className="w-3 h-3 text-white/20 group-hover:text-white/50 flex-shrink-0 transition-colors" />
+        </Link>
 
-        {/* Logout */}
         <button
           onClick={logout}
           className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-[12px] text-white/40 hover:bg-red-500/[0.12] hover:text-red-400 transition-all"

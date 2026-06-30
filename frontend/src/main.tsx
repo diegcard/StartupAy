@@ -4,12 +4,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Layout } from './components/layout/Layout'
 import { LoginPage } from './pages/login/LoginPage'
+import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { TicketListPage } from './pages/tickets/list/TicketListPage'
 import { TicketDetailPage } from './pages/tickets/detail/TicketDetailPage'
 import { NewTicketPage } from './pages/tickets/new/NewTicketPage'
 import { MetricsPage } from './pages/metrics/MetricsPage'
 import { EscalationsPage } from './pages/escalations/EscalationsPage'
 import { AdminPage } from './pages/admin/AdminPage'
+import { ProfilePage } from './pages/profile/ProfilePage'
 import { useAuthStore } from './store/auth'
 import './index.css'
 
@@ -27,15 +29,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/tickets" replace />} />
+            <Route index element={<DashboardPage />} />
             <Route path="tickets" element={<TicketListPage />} />
             <Route path="tickets/new" element={<NewTicketPage />} />
             <Route path="tickets/:id" element={<TicketDetailPage />} />
             <Route path="escalations" element={<EscalationsPage />} />
             <Route path="metrics" element={<MetricsPage />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/tickets" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

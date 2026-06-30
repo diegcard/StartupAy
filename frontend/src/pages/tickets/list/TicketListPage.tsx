@@ -6,10 +6,14 @@ import { useDebounce } from '../../../hooks/useDebounce'
 import { useAuthStore } from '../../../store/auth'
 import { useTicketNavStore } from '../../../store/ticketNav'
 import { useCommandPaletteStore } from '../../../store/commandPalette'
+import { useBulkUpdate } from '../../../hooks/useBulkUpdate'
 import { TicketFilters } from './TicketFilters'
 import { TicketTable } from './TicketTable'
 import { Button } from '../../../components/ui/Button'
 import { Card } from '../../../components/ui/Card'
+import { BulkActionBar } from '../../../components/ui/BulkActionBar'
+import { SavedFilterChips } from '../../../components/ui/SavedFilterChips'
+import { SavedFilter } from '../../../store/savedFilters'
 
 export type SortKey = 'slaDeadline' | 'priority' | 'createdAt' | 'status'
 export type SortDir = 'asc' | 'desc'
@@ -30,20 +34,23 @@ export function TicketListPage() {
   const searchRef   = useRef<HTMLInputElement>(null)
   const setNavIds   = useTicketNavStore(s => s.setIds)
   const openPalette = useCommandPaletteStore(s => s.open)
+  const isSupervisor = agent?.role === 'SUPERVISOR' || agent?.role === 'ADMIN'
 
-  const [search,     setSearch]     = useState('')
-  const [status,     setStatus]     = useState('')
-  const [priority,   setPriority]   = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [channel,    setChannel]    = useState('')
-  const [myTickets,  setMyTickets]  = useState(false)
-  const [sortBy,     setSortBy]     = useState<SortKey>('slaDeadline')
-  const [sortDir,    setSortDir]    = useState<SortDir>('asc')
-  const [page,       setPage]       = useState(1)
+  const [search,      setSearch]      = useState('')
+  const [status,      setStatus]      = useState('')
+  const [priority,    setPriority]    = useState('')
+  const [categoryId,  setCategoryId]  = useState('')
+  const [channel,     setChannel]     = useState('')
+  const [myTickets,   setMyTickets]   = useState(false)
+  const [sortBy,      setSortBy]      = useState<SortKey>('slaDeadline')
+  const [sortDir,     setSortDir]     = useState<SortDir>('asc')
+  const [page,        setPage]        = useState(1)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => { setPage(1) }, [status, priority, categoryId, channel, debouncedSearch, myTickets, sortBy, sortDir])
+  useEffect(() => { setSelectedIds([]) }, [page, status, priority, categoryId, channel, debouncedSearch])
 
   const { data, isLoading, isFetching } = useTickets({
     status:     status || undefined,
@@ -62,6 +69,8 @@ export function TicketListPage() {
   const totalPages = data?.totalPages ?? 1
 
   useEffect(() => { setNavIds(tickets.map(t => t.id)) }, [tickets, setNavIds])
+
+  const bulkUpdate = useBulkUpdate()
 
   function handleSort(key: SortKey) {
     if (sortBy === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -89,6 +98,38 @@ export function TicketListPage() {
     mine:      myTickets,
     critical:  priority === 'CRITICAL',
     escalated: status === 'ESCALATED',
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id])
+  }
+
+  function toggleAll() {
+    const allIds = tickets.map(t => t.id)
+    const allSelected = allIds.every(id => selectedIds.includes(id))
+    setSelectedIds(allSelected ? [] : allIds)
+  }
+
+  function handleBulkStatus(newStatus: string) {
+    bulkUpdate.mutate(
+      { ids: selectedIds, payload: { status: newStatus, aiSuggested: false } },
+      { onSuccess: () => setSelectedIds([]) },
+    )
+  }
+
+  function handleBulkAssign(agentId: string) {
+    bulkUpdate.mutate(
+      { ids: selectedIds, payload: { assignedTo: agentId, aiSuggested: false } },
+      { onSuccess: () => setSelectedIds([]) },
+    )
+  }
+
+  function applyFilter(filter: SavedFilter) {
+    if (filter.status !== undefined)     setStatus(filter.status ?? '')
+    if (filter.priority !== undefined)   setPriority(filter.priority ?? '')
+    if (filter.categoryId !== undefined) setCategoryId(filter.categoryId ?? '')
+    if (filter.channel !== undefined)    setChannel(filter.channel ?? '')
+    if (filter.myTickets !== undefined)  setMyTickets(filter.myTickets ?? false)
   }
 
   return (
@@ -138,6 +179,11 @@ export function TicketListPage() {
         ))}
       </div>
 
+      <SavedFilterChips
+        currentFilters={{ status, priority, categoryId, channel, myTickets }}
+        onApply={applyFilter}
+      />
+
       <TicketFilters
         searchRef={searchRef}
         search={search}
@@ -159,6 +205,9 @@ export function TicketListPage() {
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
+          selectedIds={selectedIds}
+          onToggle={toggleSelect}
+          onToggleAll={toggleAll}
         />
       </Card>
 
@@ -210,6 +259,16 @@ export function TicketListPage() {
         <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">⌘K</kbd>
         {' '}paleta
       </p>
+
+      {selectedIds.length > 0 && (
+        <BulkActionBar
+          selectedCount={selectedIds.length}
+          onClear={() => setSelectedIds([])}
+          onChangeStatus={handleBulkStatus}
+          onAssign={isSupervisor ? handleBulkAssign : undefined}
+          loading={bulkUpdate.isPending}
+        />
+      )}
     </div>
   )
 }

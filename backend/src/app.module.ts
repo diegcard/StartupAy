@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
 import { Category } from './entities/category.entity'
 import { Agent } from './entities/agent.entity'
 import { AgentSkill } from './entities/agent-skill.entity'
@@ -21,6 +23,7 @@ import { EscalationsModule } from './modules/escalations/escalations.module'
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 30 }]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
@@ -37,6 +40,12 @@ import { EscalationsModule } from './modules/escalations/escalations.module'
     WebhooksModule,
     MetricsModule,
     EscalationsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

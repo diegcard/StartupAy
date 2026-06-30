@@ -1,5 +1,7 @@
-import { TrendingDown, Clock, CheckCircle, AlertCircle, Sparkles, ShieldAlert, Target } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingDown, Clock, CheckCircle, AlertCircle, Sparkles, ShieldAlert, Target, Download, Loader2 } from 'lucide-react'
 import { useMetrics } from '../../hooks/useMetrics'
+import { metricsService } from '../../services/metrics.service'
 import { Spinner } from '../../components/ui/Spinner'
 import { Card } from '../../components/ui/Card'
 import { KpiCard } from './KpiCard'
@@ -31,6 +33,12 @@ function ConfidenceBar({ low, medium, high }: { low: number; medium: number; hig
 
 export function MetricsPage() {
   const { data: metrics, isLoading } = useMetrics()
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try { await metricsService.exportCsv() } finally { setExporting(false) }
+  }
 
   if (isLoading || !metrics) return <Spinner text="Cargando métricas..." />
 
@@ -59,9 +67,19 @@ export function MetricsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="border-b border-slate-200 pb-4">
-        <h1 className="text-lg font-bold text-slate-900 tracking-tight">Métricas de Soporte</h1>
-        <p className="text-xs text-slate-500 mt-0.5 uppercase tracking-wide">Actualización cada 30 segundos</p>
+      <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight">Métricas de Soporte</h1>
+          <p className="text-xs text-slate-500 mt-0.5 uppercase tracking-wide">Actualización cada 30 segundos</p>
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
+        >
+          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          Exportar CSV
+        </button>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
