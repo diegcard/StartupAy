@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { Agent, AgentRole, Category } from '../../types'
 import { Button } from '../../components/ui/Button'
 import { FormField, inputClass } from '../../components/ui/FormField'
@@ -43,7 +43,7 @@ export function AgentModal({ agent, categories, onClose, onSubmit, loading }: Ag
     }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     try {

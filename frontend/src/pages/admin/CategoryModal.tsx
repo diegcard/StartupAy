@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { Category } from '../../types'
 import { Button } from '../../components/ui/Button'
 import { FormField, inputClass } from '../../components/ui/FormField'
@@ -24,7 +24,7 @@ export function CategoryModal({ category, onClose, onSubmit, loading }: Category
 
   const set = (key: string, val: unknown) => setForm(f => ({ ...f, [key]: val }))
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     try {

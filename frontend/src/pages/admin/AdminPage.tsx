@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, FC } from 'react'
 import { useAuthStore } from '../../store/auth'
 import { AgentsTab } from './AgentsTab'
 import { CategoriesTab } from './CategoriesTab'
@@ -7,7 +7,7 @@ import { Users, Tag, Shield } from 'lucide-react'
 
 type Tab = 'agents' | 'categories'
 
-const TABS: { id: Tab; label: string; icon: React.FC<{ className?: string }> }[] = [
+const TABS: { id: Tab; label: string; icon: FC<{ className?: string }> }[] = [
   { id: 'agents', label: 'Agentes', icon: Users },
   { id: 'categories', label: 'Categorías', icon: Tag },
 ]
