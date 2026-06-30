@@ -118,26 +118,48 @@ Responde ÚNICAMENTE con JSON válido, sin markdown ni texto adicional:
           const jsonMatch = text.match(/\{[\s\S]*\}/)
           if (!jsonMatch) return null
           const parsed = JSON.parse(jsonMatch[0]) as GeminiClassification
-          // Normalize null string to undefined
           if ((parsed.draftResponse as any) === 'null' || parsed.draftResponse === null) {
             parsed.draftResponse = undefined
           }
           return parsed
         } catch (err: any) {
-          const isRateLimit = err?.status === 429
-          if (isRateLimit && attempt < 3) {
-            const delay = attempt * 15_000
-            console.warn(`Gemini rate limit, reintentando en ${delay / 1000}s (intento ${attempt}/3)`)
-            await new Promise(r => setTimeout(r, delay))
-            continue
+          if (err?.status !== 429) throw err
+
+          const isDailyQuota = this.isDailyQuotaExhausted(err)
+          if (isDailyQuota) {
+            console.error(`[Gemini] Cuota diaria agotada en el tier gratuito. El ticket se creará sin clasificación IA hasta que se renueve la cuota (medianoche PT).`)
+            throw err
           }
-          throw err
+
+          if (attempt >= 3) throw err
+
+          const retryAfterMs = this.parseRetryDelay(err) ?? attempt * 15_000
+          console.warn(`[Gemini] Rate limit por minuto — reintentando en ${retryAfterMs / 1000}s (intento ${attempt}/3)`)
+          await new Promise(r => setTimeout(r, retryAfterMs))
         }
       }
       return null
     } catch (err) {
-      console.error('Gemini classification error:', err)
+      console.error('[Gemini] Error de clasificación:', err)
       return null
     }
+  }
+
+  private isDailyQuotaExhausted(err: any): boolean {
+    const violations: any[] = err?.errorDetails?.find(
+      (d: any) => d['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure',
+    )?.violations ?? []
+    return violations.some(v =>
+      typeof v.quotaId === 'string' && v.quotaId.toLowerCase().includes('perday'),
+    )
+  }
+
+  private parseRetryDelay(err: any): number | null {
+    const retryInfo = err?.errorDetails?.find(
+      (d: any) => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo',
+    )
+    if (!retryInfo?.retryDelay) return null
+    const seconds = parseInt(String(retryInfo.retryDelay).replace(/[^0-9]/g, ''), 10)
+    return isNaN(seconds) ? null : (seconds + 1) * 1_000
   }
 }
