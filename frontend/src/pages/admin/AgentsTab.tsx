@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Agent } from '../../types'
-import { useAgents, useCreateAgent, useUpdateAgent, useRemoveAgent } from '../../hooks/useAgents'
+import { useAgents, useCreateAgent, useUpdateAgent } from '../../hooks/useAgents'
 import { useCategories } from '../../hooks/useCategories'
 import { AgentModal } from './AgentModal'
 import { Button } from '../../components/ui/Button'
@@ -24,7 +24,6 @@ export function AgentsTab() {
   const { data: categories = [] } = useCategories()
   const createAgent = useCreateAgent()
   const updateAgent = useUpdateAgent()
-  const removeAgent = useRemoveAgent()
 
   const [modal, setModal] = useState<{ open: boolean; agent?: Agent | null }>({ open: false })
 
