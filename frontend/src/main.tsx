@@ -38,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="admin" element={<AdminPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
+          <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
