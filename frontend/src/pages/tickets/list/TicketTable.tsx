@@ -18,7 +18,7 @@ interface TicketTableProps {
 
 const HEADERS = ['Ticket', 'Canal', 'Categoría', 'Estado', 'Prioridad', 'SLA', 'Asignado', 'Creado']
 
-export function TicketTable({ tickets, isLoading, sortBy, sortDir, onSort }: TicketTableProps) {
+export function TicketTable({ tickets, isLoading }: TicketTableProps) {
   const navigate = useNavigate()
 
   if (isLoading) {

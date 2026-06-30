@@ -34,7 +34,6 @@ export function StatusStepper({ status }: StatusStepperProps) {
         {MAIN_FLOW.map((step, i) => {
           const isPast    = i < activeIndex
           const isCurrent = i === activeIndex && !isBranch
-          const isFuture  = i > activeIndex
 
           return (
             <div key={step} className="flex items-center flex-1 last:flex-none">

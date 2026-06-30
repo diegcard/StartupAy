@@ -11,7 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { inputClass } from '../../components/ui/FormField'
 import { EscalationWithTicket } from '../../types'
 
-const TRIGGER_META = {
+const TRIGGER_META: Record<string, { label: string; color: string }> = {
   REQUIRES_HUMAN: { label: 'Categoría sensible', color: 'bg-red-100 text-red-700 border-red-200' },
   LOW_CONFIDENCE: { label: 'Baja confianza IA', color: 'bg-amber-100 text-amber-700 border-amber-200' },
 }
@@ -23,7 +23,7 @@ interface ResolveFormProps {
   onResolve: (wasAiCorrect: boolean, note: string, correctCategoryId?: string) => void
 }
 
-function ResolveForm({ escalationId, onClose, isResolving, onResolve }: ResolveFormProps) {
+function ResolveForm({ onClose, isResolving, onResolve }: ResolveFormProps) {
   const [note, setNote] = useState('')
   const [correctCategoryId, setCorrectCategoryId] = useState('')
   const { data: categories } = useCategories()

@@ -45,6 +45,7 @@ export interface Ticket {
   aiConfidence?: number
   aiSummary?: string
   history?: TicketHistoryEntry[]
+  escalations?: Escalation[]
 }
 
 export interface TicketHistoryEntry {
@@ -62,6 +63,23 @@ export interface TicketHistoryEntry {
   createdAt: string
 }
 
+export interface Escalation {
+  id: string
+  ticketId: string
+  categoryId?: string
+  trigger: string
+  aiConfidence?: number
+  assignedToId?: string
+  resolvedAt?: string
+  wasAiCorrect?: boolean
+  resolutionNote?: string
+  createdAt: string
+}
+
+export type EscalationWithTicket = Escalation & {
+  ticket?: Pick<Ticket, 'id' | 'title' | 'category'>
+}
+
 export interface Metrics {
   totalOpen: number
   totalInProgress: number
@@ -69,6 +87,10 @@ export interface Metrics {
   slaCompliance: number
   avgMttrHours: number
   reclassificationRate: number
+  aiPrecision: number | null
+  escalationRate: number
+  avgAiConfidence: number | null
+  confidenceDistribution?: { low: number; medium: number; high: number }
   byCategory: { name: string; count: number }[]
   byChannel: { channel: string; count: number }[]
 }

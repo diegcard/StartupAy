@@ -20,8 +20,8 @@ const TRIGGER_LABELS: Record<string, { label: string; color: string }> = {
   LOW_CONFIDENCE: { label: 'Baja confianza IA', color: 'text-amber-700 bg-amber-50 border-amber-200' },
 }
 
-function ResolveForm({ escalationId, isResolving, onResolve, onCancel }: {
-  escalationId: string
+function ResolveForm({ isResolving, onResolve, onCancel }: {
+  escalationId?: string
   isResolving: boolean
   onResolve: (wasAiCorrect: boolean, note: string, correctCategoryId?: string) => void
   onCancel: () => void
