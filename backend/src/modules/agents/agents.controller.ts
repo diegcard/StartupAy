@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import { AgentsService } from './agents.service'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -14,5 +14,11 @@ export class AgentsController {
   @Roles(AgentRole.SUPERVISOR, AgentRole.ADMIN)
   findAll() {
     return this.agentsService.findAll()
+  }
+
+  @Get('suggest')
+  @Roles(AgentRole.SUPERVISOR, AgentRole.ADMIN)
+  suggestSpecialist(@Query('categoryId') categoryId: string) {
+    return this.agentsService.suggestSpecialist(categoryId)
   }
 }

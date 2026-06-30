@@ -58,6 +58,7 @@ export interface TicketHistoryEntry {
   reason?: string
   aiSuggested: boolean
   aiConfidence?: number
+  isInternal: boolean
   createdAt: string
 }
 

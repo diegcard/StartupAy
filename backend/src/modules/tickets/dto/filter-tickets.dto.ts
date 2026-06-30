@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsEnum } from 'class-validator'
-import { TicketStatus, Priority } from '../../../entities/enums'
+import { TicketStatus, Priority, Channel } from '../../../entities/enums'
 
 export class FilterTicketsDto {
   @IsEnum(TicketStatus)
@@ -17,6 +17,22 @@ export class FilterTicketsDto {
   @IsString()
   @IsOptional()
   assignedTo?: string
+
+  @IsEnum(Channel)
+  @IsOptional()
+  channel?: Channel
+
+  @IsString()
+  @IsOptional()
+  search?: string
+
+  @IsString()
+  @IsOptional()
+  sortBy?: string
+
+  @IsString()
+  @IsOptional()
+  sortDir?: string
 
   @IsString()
   @IsOptional()

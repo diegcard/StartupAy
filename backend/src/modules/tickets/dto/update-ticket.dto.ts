@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator'
+import { IsString, IsOptional, IsEnum, IsBoolean } from 'class-validator'
 import { TicketStatus, Priority } from '../../../entities/enums'
 
 export class UpdateTicketDto {
@@ -21,4 +21,12 @@ export class UpdateTicketDto {
   @IsString()
   @IsOptional()
   reason?: string
+
+  @IsBoolean()
+  @IsOptional()
+  aiSuggested?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  isInternal?: boolean
 }

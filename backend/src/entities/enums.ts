@@ -25,3 +25,8 @@ export enum AgentRole {
   SUPERVISOR = 'SUPERVISOR',
   ADMIN = 'ADMIN',
 }
+
+export enum EscalationTrigger {
+  REQUIRES_HUMAN = 'REQUIRES_HUMAN',
+  LOW_CONFIDENCE = 'LOW_CONFIDENCE',
+}

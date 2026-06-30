@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { Priority } from '../../entities/enums'
+import { Priority, TicketStatus, EscalationTrigger } from '../../entities/enums'
+import { CONFIDENCE_MIN } from '../../shared/constants'
 import { Ticket } from '../../entities/ticket.entity'
 import { Attachment } from '../../entities/attachment.entity'
-import { GeminiService } from '../../shared/gemini/gemini.service'
+import { Category } from '../../entities/category.entity'
+import { GeminiService, GeminiClassification } from '../../shared/gemini/gemini.service'
 import { SlaService } from '../../shared/sla/sla.service'
+import { EscalationsService } from '../escalations/escalations.service'
 import { EmailWebhookDto } from './dto/email-webhook.dto'
 import { WhatsAppWebhookDto } from './dto/whatsapp-webhook.dto'
 
@@ -16,8 +19,11 @@ export class WebhooksService {
     private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(Attachment)
     private readonly attachmentRepository: Repository<Attachment>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
     private readonly gemini: GeminiService,
     private readonly sla: SlaService,
+    private readonly escalationsService: EscalationsService,
   ) {}
 
   async receiveEmail(dto: EmailWebhookDto) {
@@ -53,6 +59,8 @@ export class WebhooksService {
       await this.attachmentRepository.save(attachments)
     }
 
+    await this.applyPostClassificationRules(saved.id, classification?.categoryId ?? null, classification, dto.subject)
+
     return { ticketId: saved.id, aiClassification: classification }
   }
 
@@ -76,6 +84,53 @@ export class WebhooksService {
     })
 
     const saved = await this.ticketRepository.save(ticket)
+
+    await this.applyPostClassificationRules(saved.id, classification?.categoryId ?? null, classification, title)
+
     return { ticketId: saved.id, aiClassification: classification }
+  }
+
+  private async applyPostClassificationRules(
+    ticketId: string,
+    categoryId: string | null,
+    classification: GeminiClassification | null,
+    ticketTitle?: string,
+  ) {
+    if (!classification || !categoryId) return
+
+    const category = await this.categoryRepository.findOne({
+      where: { id: categoryId },
+      select: ['id', 'name', 'requiresHuman'],
+    })
+
+    if (!category) return
+
+    if (category.requiresHuman) {
+      await this.ticketRepository.update(ticketId, { status: TicketStatus.ESCALATED })
+      await this.escalationsService.create({
+        ticketId,
+        categoryId,
+        trigger: EscalationTrigger.REQUIRES_HUMAN,
+        aiConfidence: classification.confidence,
+        ticketTitle,
+        categoryName: category.name,
+      })
+      return
+    }
+
+    if (classification.confidence < CONFIDENCE_MIN) {
+      await this.ticketRepository.update(ticketId, {
+        status: TicketStatus.ESCALATED,
+        categoryId: null,
+      })
+      await this.escalationsService.create({
+        ticketId,
+        categoryId,
+        trigger: EscalationTrigger.LOW_CONFIDENCE,
+        aiConfidence: classification.confidence,
+        ticketTitle,
+        categoryName: category.name,
+      })
+    }
   }
 }

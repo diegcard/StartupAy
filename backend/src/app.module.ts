@@ -7,6 +7,7 @@ import { AgentSkill } from './entities/agent-skill.entity'
 import { Ticket } from './entities/ticket.entity'
 import { TicketHistory } from './entities/ticket-history.entity'
 import { Attachment } from './entities/attachment.entity'
+import { Escalation } from './entities/escalation.entity'
 import { GeminiModule } from './shared/gemini/gemini.module'
 import { SlaModule } from './shared/sla/sla.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -15,6 +16,7 @@ import { CategoriesModule } from './modules/categories/categories.module'
 import { AgentsModule } from './modules/agents/agents.module'
 import { WebhooksModule } from './modules/webhooks/webhooks.module'
 import { MetricsModule } from './modules/metrics/metrics.module'
+import { EscalationsModule } from './modules/escalations/escalations.module'
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { MetricsModule } from './modules/metrics/metrics.module'
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [Category, Agent, AgentSkill, Ticket, TicketHistory, Attachment],
+      entities: [Category, Agent, AgentSkill, Ticket, TicketHistory, Attachment, Escalation],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: false,
     }),
@@ -34,6 +36,7 @@ import { MetricsModule } from './modules/metrics/metrics.module'
     AgentsModule,
     WebhooksModule,
     MetricsModule,
+    EscalationsModule,
   ],
 })
 export class AppModule {}

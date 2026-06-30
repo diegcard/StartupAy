@@ -5,14 +5,20 @@ import { SlaIndicator } from '../../../components/ui/SlaIndicator'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+export type SortKey = 'slaDeadline' | 'priority' | 'createdAt' | 'status'
+export type SortDir = 'asc' | 'desc'
+
 interface TicketTableProps {
   tickets: Ticket[]
   isLoading: boolean
+  sortBy?: SortKey
+  sortDir?: SortDir
+  onSort?: (key: SortKey) => void
 }
 
 const HEADERS = ['Ticket', 'Canal', 'Categoría', 'Estado', 'Prioridad', 'SLA', 'Asignado', 'Creado']
 
-export function TicketTable({ tickets, isLoading }: TicketTableProps) {
+export function TicketTable({ tickets, isLoading, sortBy, sortDir, onSort }: TicketTableProps) {
   const navigate = useNavigate()
 
   if (isLoading) {

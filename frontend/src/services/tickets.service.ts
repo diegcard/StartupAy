@@ -6,6 +6,12 @@ export interface TicketFilters {
   priority?: string
   categoryId?: string
   assignedTo?: string
+  channel?: string
+  search?: string
+  sortBy?: string
+  sortDir?: string
+  page?: string
+  limit?: string
 }
 
 export interface PaginatedTickets {
@@ -13,12 +19,14 @@ export interface PaginatedTickets {
   total: number
   page: number
   limit: number
+  totalPages: number
 }
 
 export interface CreateTicketPayload {
   title: string
   description: string
   channel: string
+  priority?: string
   merchantId?: string
   transactionId?: string
   contactEmail?: string
@@ -32,12 +40,20 @@ export interface UpdateTicketPayload {
   categoryId?: string
   assignedTo?: string
   reason?: string
+  aiSuggested?: boolean
+  isInternal?: boolean
+}
+
+export interface SuggestSpecialistResult {
+  agent: { id: string; name: string; email: string; role: string }
+  activeTickets: number
+  loadRatio: number
 }
 
 export const ticketsService = {
   getAll: (filters: TicketFilters = {}) => {
     const params = new URLSearchParams()
-    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v) })
+    Object.entries(filters).forEach(([k, v]) => { if (v !== undefined && v !== '') params.set(k, String(v)) })
     return api.get<PaginatedTickets>(`/tickets?${params}`).then(r => r.data)
   },
 
@@ -52,4 +68,7 @@ export const ticketsService = {
 
   classify: (id: string) =>
     api.post(`/tickets/${id}/classify`, {}).then(r => r.data),
+
+  suggestSpecialist: (id: string) =>
+    api.get<SuggestSpecialistResult>(`/tickets/${id}/suggest-specialist`).then(r => r.data),
 }

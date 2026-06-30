@@ -44,6 +44,9 @@ export class TicketHistory {
   @Column({ type: 'float', nullable: true })
   aiConfidence: number
 
+  @Column({ default: false })
+  isInternal: boolean
+
   @CreateDateColumn()
   createdAt: Date
 

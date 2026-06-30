@@ -14,18 +14,22 @@ interface SlaCardProps {
 export function SlaCard({ title, value, unit, target, baseline, color, barColor, barWidth }: SlaCardProps) {
   return (
     <Card className="p-5">
-      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{title}</p>
-      <div className="flex items-end gap-2 mb-3">
-        <p className={`text-4xl font-bold ${color}`}>{value}{unit}</p>
-        <p className="text-sm text-gray-400 pb-1">meta: {target}</p>
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{title}</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-3xl font-bold tabular-nums ${color}`}>{value}{unit}</span>
+            <span className="text-xs text-slate-400 font-medium">meta {target}</span>
+          </div>
+        </div>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
         <div
-          className={`h-2 rounded-full transition-all ${barColor}`}
-          style={{ width: `${barWidth}%` }}
+          className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${Math.min(barWidth, 100)}%` }}
         />
       </div>
-      <p className="text-xs text-gray-500 mt-2">{baseline}</p>
+      <p className="text-[11px] text-slate-400 mt-2">{baseline}</p>
     </Card>
   )
 }

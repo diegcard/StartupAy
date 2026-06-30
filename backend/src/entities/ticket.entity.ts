@@ -8,6 +8,7 @@ import { Category } from './category.entity'
 import { Agent } from './agent.entity'
 import { TicketHistory } from './ticket-history.entity'
 import { Attachment } from './attachment.entity'
+import { Escalation } from './escalation.entity'
 
 @Entity('tickets')
 export class Ticket {
@@ -81,4 +82,7 @@ export class Ticket {
 
   @OneToMany(() => Attachment, a => a.ticket)
   attachments: Attachment[]
+
+  @OneToMany(() => Escalation, e => e.ticket)
+  escalations: Escalation[]
 }
