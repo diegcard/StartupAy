@@ -55,7 +55,7 @@ export class MetricsService {
         .createQueryBuilder('ticket')
         .select([
           'COUNT(CASE WHEN ticket.aiSuggestedCategory IS NOT NULL THEN 1 END) AS withSuggestion',
-          'COUNT(CASE WHEN ticket.aiSuggestedCategory IS NOT NULL AND ticket.categoryId = ticket.aiSuggestedCategory THEN 1 END) AS matching',
+          'COUNT(CASE WHEN ticket.aiSuggestedCategory IS NOT NULL AND CAST(ticket.categoryId AS text) = ticket.aiSuggestedCategory THEN 1 END) AS matching',
           'AVG(CASE WHEN ticket.aiConfidence IS NOT NULL THEN ticket.aiConfidence END) AS avgConfidence',
           'COUNT(CASE WHEN ticket.aiConfidence < 0.70 AND ticket.aiConfidence IS NOT NULL THEN 1 END) AS confLow',
           'COUNT(CASE WHEN ticket.aiConfidence >= 0.70 AND ticket.aiConfidence < 0.90 THEN 1 END) AS confMedium',
